@@ -56,7 +56,6 @@ public class PairsController : ControllerBase
     {
         const string queries = @"
         -- TASK 2
-        
         CREATE TABLE Clients (
 	        Id BIGINT PRIMARY KEY IDENTITY(1, 1),
 	        Name NVARCHAR(200)
@@ -83,31 +82,44 @@ public class PairsController : ControllerBase
         	ORDER BY [c].[Id];
 
 
-        -- TASK 3 (underdeveloped)
-        CREATE TABLE Fun (
+        -- TASK 3
+        CREATE TABLE Dates (
             Id BIGINT NOT NULL,
             Date DATETIME2 NOT NULL
         )
         
-        SELECT
-          [left].[Id] AS [leftId],
-          [left].[Date] AS [leftDate],
-          [right].[Date] AS [rightDate]
-        FROM 
-          (
-          SELECT [Id], [Date] 
-          FROM [Fun]
-          ) AS [left]
+        SELECT [left].[Id] AS [leftId], [left].[Date] AS [leftDate], [right].[Date] AS [rightDate]
+		INTO [DateIntervals]
+		FROM 
+			(
+			SELECT [Id], [Date] 
+			FROM [Dates]
+			) AS [left]
 
-        INNER JOIN
+			INNER JOIN
 
-          (
-          SELECT [Id], [Date]
-          FROM [Fun]
-          ) AS [right] ON [left].[Id] = [right].[Id]
+			(
+			SELECT [Id], [Date]
+			FROM [Dates]
+			) AS [right] ON [left].[Id] = [right].[Id]
 
-        WHERE [left].[Date] < [right].[Date]
-        ORDER BY [leftId], [leftDate], [rightDate]
+		WHERE [left].[Date] < [right].[Date]
+		ORDER BY [leftId], [leftDate], [rightDate]
+
+		; WITH [TableDateIntervalsWithRowID] AS
+		(
+			SELECT ROW_NUMBER() OVER (PARTITION BY [leftDate] ORDER BY [leftDate]) AS [RowID], [leftId], [leftDate], [rightDate]
+			FROM [DateIntervals]
+		)
+
+
+		DELETE FROM [TableDateIntervalsWithRowID] WHERE [RowID] > 1
+
+
+		SELECT * FROM [DateIntervals]
+		
+
+		DROP TABLE [DateIntervals]
         ";
     }
 }
